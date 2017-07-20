@@ -6,6 +6,11 @@
 \usepackage{csquotes}
 \usepackage{listings}
 
+\lstset{ %
+	  numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+	numbersep=5pt,                   % how far the line-numbers are from the code
+}
+
 \usepackage{setspace}
 \singlespacing
 \onehalfspacing
@@ -26,6 +31,8 @@ After finishing the assignments in this document, you will be able to to:
 	\item Implement and modify a distributed experiment using Gumby. This includes writing your own scenarios and defining experiment modules.
 	\item Deploy and execute your experiment on our DAS-5 supercomputer using Gumby.
 \end{itemize}
+
+This tutorial assumes that the reader has a basic understanding of the Python programming language.
 
 \section{Introduction}
 Experimentation lies at the heart of science. They are important to verify hypotheses or to analyse behaviour of algorithms.
@@ -55,6 +62,7 @@ Gumby can be downloaded from Github\footnote{https://github.com/tribler/gumby}, 
 This tutorial will explain the basic concepts in Gumby.
 
 \section{Create Your Experiment}
+\label{sec:create_experiment}
 Start a web browser and navigate to our Jenkins server: https://jenkins.tribler.org.
 Jenkins is an open-source software to automate running various jobs like tests or experiments.
 These jobs can be executed on machines, which are under \emph{Build Executor Status} 
@@ -172,14 +180,140 @@ You will notice that the difference between the two messages lies in the declara
 These two flags let Dispersy know that you want to directly send this message to others and you will be the one in charge of supplying the peers/candidates to send it to.
 
 One observation you will make is that it is much faster to send to other candidates directly instead of gossiping it using a broadcast.
-Still, it would not be wise, even erroneous, to use the supplied code outside of Gumby.\\
-\\
-\textbf{Questions/exercises:}
+Still, it would not be wise, even erroneous, to use the supplied code outside of Gumby.
+
+\subsection{The Gumby Experiment}
+Now that you know how a basic Dispersy community works and that you understand messaging between nodes, we should focus on the Gumby experiment that uses the Dispersy community.
+
+\subsubsection{Gumby Configuration File}
+Each experiment has a configuration file, which specifies generic settings of each experiment.
+This file can be found here:
+
+https://github.com/qstokkink/gumby/blob/workshop\_code/experiments/benaloh/benaloh\_das5.conf
+
+This file has the following content:
+
+\begin{lstlisting}[frame=single]
+experiment_name = "benaloh"
+scenario_file = 'benaloh.scenario'
+
+das4_node_amount = 5
+das4_instances_to_run = 5
+das4_node_timeout = 165
+
+local_setup_cmd = 'das4_setup.sh'
+local_instance_cmd = 'das4_reserve_and_run.sh'
+das4_node_command = "launch_scenario.py"
+tracker_cmd = 'run_tracker.sh'
+tracker_port = __unique_port__
+experiment_server_cmd = 'experiment_server.py'
+sync_port = __unique_port__
+sync_experiment_start_delay = 1
+use_local_venv = TRUE
+with_systemtap = false
+\end{lstlisting}
+
+We will now elaborate some important configuration variables:
+\begin{enumerate}
+	\item \emph{scenario\_file}: this option specifies the scenario file that the experiment should use. They should be located in the same directory as the configuration file. We will explain scenario files in the next section.
+	\item \emph{das4\_node\_amount}: specifies the total number of nodes that should be used for the experiment.
+	\item \emph{das4\_instances\_to\_run}: the number of instances to run \textbf{in total}. Each DAS-5 node can run multiple instances. Gumby automatically load-balances the instances over the nodes. In this scenario, Gumby will schedule one instance on each node.
+	\item \emph{das4\_node\_timeout}: the timeout of the DAS-5 node in seconds. After this duration, your DAS-5 reservation will expire and your experiment will be aborted. It is important to make sure that your experiment finishes within the specified DAS-5 timeout period to avoid unexpected results during your experiments.
+\end{enumerate}
+
+The other configuration options are often not modified and are badly documented, however, if you have any questions about them, you can ask the instructors for more information.
+
+\subsubsection{Gumby Scenario File}
+Each experiment has a scenario file attached that specifies exactly what should happen during the experiment.
+This file can be founded here:
+
+https://github.com/qstokkink/gumby/blob/workshop\_code/experiments/benaloh/benaloh.scenario
+
+This file has the following content:
+
+\begin{lstlisting}[frame=single]
+&module gumby.modules.dispersy_module.DispersyModule
+&module experiments.benaloh.benaloh_module.BenalohModule
+
+@0 isolate_community BenalohCommunity
+@1 start_session
+@2 introduce_peers
+@15 reset_dispersy_statistics
+@15 annotate start-experiment
+
+@30 share_local
+@45 share_subset_sum
+
+@1:30 print_local_value
+@1:30 print_total_sum
+
+@2:0 stop_session
+@2:15 stop
+\end{lstlisting}
+
+The first two lines indicate the required Gumby modules for this experiment.
+The exact specification of a Gumby module will be discussed in the next section.
+Note that we are using two different modules, namely \texttt{DispersyModule} and \texttt{BenalohModule}.
+\texttt{DispersyModule} provides support for using Dispersy during our experiment while \texttt{BenalohModule} implements functionality specifically for our experiment.
+The full path to these modules must be provided.
+
+After line 4, our scenario starts.
+Each line starting with a \emph{@} symbol specifies a command.
+Let's consider the command on line 5.
+The number after the \emph{@} symbol specifies the time into the experiment when this command should be executed, in this case, one second after the experiment starts.
+Next, the command itself is specified which is \emph{start\_session}.
+This command makes sure that Dispersy is started and is listening for network traffic on the right interfaces.
+Optionally, we can provide some arguments.
+For instance, the string \texttt{BenalohCommunity} is passed as argument to the \texttt{isolate\_community} command on line 4.
+We now elaborate some of the commands found in the scenario file:
+\begin{enumerate}
+	\item \emph{isolate\_community}: when we define and start a community during an experiment, it will connect to the \enquote{live} network with real users. This is often not desired since we want to run our experiments in a controlled environment. This command isolates the community that is passed as argument to prevent any communication with users outside the experiment.
+	\item \emph{introduce\_peers}: this command makes sure that all experiment instances know about the existence of each other. Note that this does not resemble real-world behaviour where users in a network do not discover all other users immediately, but it might be helpful during experimentation.
+	\item \emph{reset\_dispersy\_statistics}: during the experiment, Dispersy keeps track of various statistics like the number of incoming and outgoing connections and data transferred. This command resets all statistics.
+	\item \emph{annotate}: often, an experiment is divided in several phases. For instance, there might a phase where users compute a value and a phase where they share this value with others. Developers are able to annotate important timestamps during the experiment with the \emph{annotate} command. These annotations will be visible in the final plots when the experiment is finished.
+	\item \emph{share\_local}: this command will share the locally generated random values with other users in the network and will send a \texttt{local-share} message. This happens exactly 30 seconds after the experiment has started. The implementation of this command is present in the \texttt{BenalohModule} file which will be explained in the next section.
+	\item \emph{share\_subset\_sum}: this command will share the subset sum and broadcasts it to all users using a \texttt{broadcast-share} message.
+	\item \emph{print\_local\_value} and \emph{print\_total\_sum}: these commands will simply print the local value and total sum to the standard output. These commands are responsible for the lines in the \emph{.out} file, explored in Section \ref{sec:create_experiment}. Note that we are able to specify duration in mm:ss format so these commands will be executed 90 seconds into the experiment (1:30 minutes).
+	\item \emph{stop\_session}: this command will stop the running Dispersy session after two minutes.
+	\item \emph{stop}: this will terminate the running process.
+\end{enumerate}
+
+Scenario files are a powerful way to specify a sequence of commands at specific times.
+When the experiment involves hundreds of nodes, it is not uncommon for the scenario to become large.
+
+\subsubsection{Gumby Module File}
+Implementation of commands present in the scenario file can be found in the Gumby module files.
+The \texttt{BenalohModule} file can be found here:
+
+https://github.com/qstokkink/gumby/blob/workshop\_code/experiments/benaloh/benaloh\_module.py
+
+This file contains three classes, including the \texttt{BenalohModule}.
+Let's take a look at the implementation of the \texttt{share\_local} command:
+
+\begin{lstlisting}[frame=single]
+    @experiment_callback
+    def share_local(self):
+        self.community.share_local()
+\end{lstlisting}
+
+The implementation of each command should be decorated by an \texttt{@experiment\_callback}.
+The name of this method must match the command in the scenario file.
+In this case, we simply call the \texttt{share\_local} method of the \texttt{BenalohCommunity}.
+
+\section{Questions and Exercises}
+Now that you have a basic understanding of Dispersy, Gumby and Jenkins, you can try to answer the following questions and do the exercises.
+
+\subsection{Questions}
 \begin{enumerate}
 \item \textit{Why is the supplied code not scalable?}
 \item \textit{Find the two race conditions in the message delivery which can cause incorrect algorithm execution.}
 \item \textit{Do the two messages have a different wire format?}
 \end{enumerate}
+
+\subsection{Exercise: Modify the Existing Experiment}
+
+This tutorial was built upon an existing experiment but in the end, you should be able to adapt experiments to your needs.
+TODO typ meer over deze exercise + fork GitHub repo + pas Gumby pointer aan etc.
 
 \bibliographystyle{plain}
 {\small \bibliography{workshop}}
