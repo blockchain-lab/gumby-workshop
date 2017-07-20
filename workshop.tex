@@ -182,7 +182,7 @@ The nodes then generate $n-2$ random numbers $R$ and calculates $s - \Sigma R$ i
 \item All nodes print the sum of all received values from step $3$.
 \end{enumerate}
 
-We will now explain all components that together form this experiment.
+\noindent We will now explain all components that together form this experiment.
 
 \subsection{The Dispersy Community}
 \label{sec:dispersy_community}
@@ -201,15 +201,15 @@ https://github.com/qstokkink/gumby/blob/workshop\_code/experiments/benaloh/benal
 \end{itemize}
 
 \noindent The finer details of creating these objects will remain out of the scope of this document, but we refer the interested reader to our extensive Dispersy tutorial\footnote{https://dispersy.readthedocs.org}.
-We would like to draw the attention of the reader to the different types of messages defined in the \\\texttt{BenalohCommunity.initiate\_meta\_messages()} method.
+For some general clarification, we would now like to draw the attention of the reader to the different types of messages defined in the \\\texttt{BenalohCommunity.initiate\_meta\_messages()} method.
 
 The first type of message you will find defined in the community file is a \textbf{broadcast} message using Dispersy's gossiping: \texttt{u"broadcast-share"}.
 This message uses \texttt{MemberAuthentication}, which means that every message will be signed  and verified when received.
 The alternative to \texttt{MemberAuthentication} is \texttt{NoAuthentication}.
-Next, you will see \texttt{FullSyncDistribution(u"ASC", 128, False)}, this takes care of stamping your message with a global time and which avoids duplicate messages.
+Next, you will see \texttt{FullSyncDistribution(u"ASC", 128, False)}, this takes care of stamping your message with a global time (a Lamport clock timestamp to be precise \cite{lamport1978time}), which avoids duplicate messages.
 Besides this, the \texttt{FullSyncDistribution} definition also serves as a flag to tell Dispersy that your message needs to be gossiped throughout the network.
 The \texttt{CommunityDestination(10)} directive then tells Dispersy that your message will be gossiped using a fanout of $10$ neighboring nodes.
-Lastly, \texttt{self.on\_broadcast\_share} tells Dispersy which function handles incoming messages of the \texttt{u"broadcast-share"} persuasion.
+Lastly, \texttt{self.on\_broadcast\_share} tells Dispersy which function handles incoming messages of the \\\texttt{u"broadcast-share"} persuasion.
 
 The other message in this file is the \texttt{u"local-share"} message.
 This message can be sent directly to other known peers.
@@ -344,21 +344,21 @@ Let's take a closer look at the implementation of the \texttt{share\_local} comm
 The implementation of each command should be decorated by an \texttt{@experiment\_callback}.
 The name of this method must match the command in the scenario file.
 In this case, we simply call the \texttt{share\_local} method of the \texttt{BenalohCommunity}.
-
+\newpage
 \section{Questions and Exercises}
 Now that you have a basic understanding of Dispersy, Gumby and Jenkins, you can try to answer the following questions and do the exercises.
 
 \subsection{Questions}
 Consider the \texttt{benaloh\_community.py} file explained in Section \ref{sec:dispersy_community}:
 \begin{enumerate}
-	\item \textit{Name one reason why the supplied code not scalable? I.e. what are the bottlenecks if we increase the number of users in the network?}
+	\item \textit{Name one reason why the supplied code is not scalable. I.e. what are the bottlenecks if we increase the number of users in the network?}
 	\item \textit{Find two race conditions in the message delivery which can cause an  incorrect algorithm execution.}
 	\item \textit{Do the two messages defined in the Benaloh community (\texttt{local-share} and \texttt{broadcast-share}) have a different format when sent over the Internet?}
 \end{enumerate}
 Consider the \texttt{benaloh.scenario} file explained in Section \ref{sec:gumby_scenario}.
 \begin{enumerate}
 \item \textit{Recall that the scenario file used two different modules: \texttt{DispersyModule} and \texttt{BenalohModule}. Which callbacks present in the scenario file are defined by which module?}
-\item \textit{What is the difference between the \emph{stop} callback and the node timeout defined in the experiment configuration file?}
+\item \textit{What is the difference between the scenario's \emph{stop} callback and the node timeout defined in the experiment configuration file?}
 \end{enumerate}
 Consider the \texttt{benaloh\_module.py} file explained in Section \ref{sec:gumby_module}.
 \begin{enumerate}
@@ -386,13 +386,15 @@ git clone <your repository URL>
 cd gumby
 \end{lstlisting}
 
-This will fetch the repository from Github and store it on our computer.
+This will fetch the repository from Github and store it on your computer.
 Git will keep track of all the changes you make in this directory (helpful: \fbox{\texttt{git status}}).
 If you are done editing your folder, add all of your modified files to git using \fbox{\texttt{git add my\_file.py}}.
 Then think of a good message for your change and commit these added files using \fbox{\texttt{git commit -m "This is my great change"}}.
 Finally you can send your collected commits to the GitHub server by running \fbox{\texttt{git push}}.
 
 You can now hook up your custom URL in Jenkins (see Section 2.2).
+For the following two exercises you can either start with a fresh workspace or modify the existing experiment files.
+To solve the bonus exercise you will need to copy the example files to your own repository.
 
 \subsubsection{EXERCISE 1: Modify the scenario}
 Add your own experiment callback \texttt{exercise\_1} which (1) adds 1 to the input defined by the scenario file and (2) prints the resulting value.
@@ -401,7 +403,7 @@ Add your own experiment callback \texttt{exercise\_1} which (1) adds 1 to the in
 Have the experiment use an additional node (note that this does not only concern the configuration file, but also the community).
 
 \subsubsection{BONUS: Modify the community}
-Have the community auto-detect when all other nodes have performed a \texttt{local-share} and start the \texttt{broadcast-share} automatically.
+Have the \texttt{BenalohCommunity} auto-detect when all other nodes have performed a \texttt{local-share} and start the \texttt{broadcast-share} automatically.
 You can then get rid of the \texttt{share\_subset\_sum} callback.
 
 \bibliographystyle{plain}
