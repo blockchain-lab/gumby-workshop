@@ -1,0 +1,59 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{anysize}
+\usepackage{mathtools}
+\usepackage{csquotes}
+
+\usepackage{setspace}
+\singlespacing
+\onehalfspacing
+\doublespacing
+\setstretch{1.3} % for custom spacing
+\marginsize{2.5cm}{2.5cm}{1cm}{3cm}
+
+\title{Implementing and deploying experiments using Dispersy and Gumby}
+
+\begin{document}
+
+\maketitle
+
+This document describes how to implement and deploy a distributed experiment using Dispersy and Gumby.
+After finishing the assignments in this document, you will be able to to:
+\begin{itemize}
+	\item Send messages to other users in a peer-to-peer network using Dispersy.
+	\item Implement and modify a distributed experiment using Gumby. This includes writing your own scenarios and defining experiment modules.
+	\item Deploy and execute your experiment on our DAS-5 supercomputer using Gumby.
+\end{itemize}
+
+\section{Introduction}
+Experimentation lies at the heart of science. They are important to verify hypotheses or to analyse behaviour of algorithms.
+In particular, in the field of distributed systems, experiments are often executed at a large scale, involving hundreds of clients producing data and communicating with each other.
+Being able to define and run your own experimentations is a valuable skill.
+
+At the distributed systems department and in particular, the blockchain lab, we have created various tools to ease the design and implementation of experiments. In this workshop, we will explore two of these tools, Dispersy and Gumby, and show the practical value of these tools using a basic distributed algorithm that involves cryptographic secret sharing and network communication.
+Before elaborating the experiment, we will first introduce Dispersy and Gumby.
+
+\subsection{Dispersy}
+Dispersy can be described as a scalable, distributed database, however, it also provides primitives for sending generic messages between users.
+Dispersy has the notion of \emph{communities} which are the best described by a group of users that share a common goal or objective.
+Some examples of available communities are:
+\begin{itemize}
+	\item SearchCommunity: This community is responsible for keyword search of content within Tribler, our peer-to-peer filesharing software.
+	\item MarketCommunity: This community enables peer-to-peer trading and transaction processing.
+\end{itemize}
+
+Creating your own community is straightforward and will be demonstrated in this tutorial.
+Dispersy is open-source software and can be downloaded from Github\footnote{https://github.com/tribler/dispersy}.
+More information about Dispersy can be found in the technical report\cite{zeilemaker2013dispersy}.
+
+\subsection{Gumby}
+Gumby is a framework specifically designed to run experiments.
+These experiments can either be executed locally, remotely on a server or on the DAS-5 supercomputer.
+Gumby can be downloaded from Github\footnote{https://github.com/tribler/gumby}, however, local experiment execution is only possible on Linux-based environments due to the requirement of \emph{procfs}.
+This tutorial will explain the basic concepts in Gumby.
+
+\bibliographystyle{plain}
+{\small \bibliography{workshop}}
+
+\end{document}
