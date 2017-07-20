@@ -4,6 +4,7 @@
 \usepackage{anysize}
 \usepackage{mathtools}
 \usepackage{csquotes}
+\usepackage{listings}
 
 \usepackage{setspace}
 \singlespacing
@@ -52,6 +53,80 @@ Gumby is a framework specifically designed to run experiments.
 These experiments can either be executed locally, remotely on a server or on the DAS-5 supercomputer.
 Gumby can be downloaded from Github\footnote{https://github.com/tribler/gumby}, however, local experiment execution is only possible on Linux-based environments due to the requirement of \emph{procfs}.
 This tutorial will explain the basic concepts in Gumby.
+
+\section{Create Your Experiment}
+Start a web browser and navigate to our Jenkins server: https://jenkins.tribler.org.
+Jenkins is an open-source software to automate running various jobs like tests or experiments.
+These jobs can be executed on machines, which are under \emph{Build Executor Status} 
+Here you will see an overview of all the machines that are capable of executing Jenkins jobs (these machines are also called \emph{slaves}).
+Take a look at the different machines: the slaves that are prefixed with \emph{DAS5\_} are clusters of the DAS-5 supercomputer.
+
+As you might know, the DAS-5 is not a single machine but shared amongst various universities in the Netherlands.
+Each university involved in the DAS-5 project hosts a cluster with a fixed amount of nodes.
+Detailed informations including the number of nodes on each cluster and hardware specifications, can be found on the DAS-5 website\footnote{http://www.cs.vu.nl/das5/clusters.shtml}.
+
+Navigate to the \emph{pers} directory on the Jenkins website and locate the job named \emph{workshop\_benaloh\_test}.
+We will copy this job so we can modify it accordingly.
+To create a copy of an existing job, you should have a valid Jenkins account; if you don't have one, please ask one of the workshop instructors for one.
+
+Start by clicking on the \emph{New Item} in the menu in the upper-left corner of the Jenkins website.
+You are now prompted to enter the name of the new job.
+Name it something like \emph{workshop\_benaloh\_test\_username} where \emph{username} should be replaced by your Jenkins username or your real name.
+Since we copy an existing job, please enter the name of the existing job under the \emph{Copy from} input, at the bottom of the page (which should be \emph{workshop\_benaloh\_test}) and press the \emph{OK} button to confirm.
+
+You will be redirected to the configuration options of the newly created Jenkins job.
+Here you can change various settings that are related to your experiment.
+Some of the most important experiments will be elaborated now:
+
+\begin{enumerate}
+	\item \emph{Restrict where this project can be run}: here you specify on which Jenkins slave you wish to run your job. It should be filled with \emph{DAS5\_TUD}, which is the TU Delft cluster of the DAS-5 supercomputer. You can also select other DAS5 clusters here but the default option should work fine.
+	\item \emph{Source Code Management}: this section specifies whether the experiment needs some code from external sources like a VCS (Git, SVN etc) to operate. Our first option specifies that we are using the settings of another Jenkins job here (\emph{Clone\_tribler\_devel}). This makes sure that Tribler is downloaded into the Jenkins workspace since Tribler is a dependency of Gumby. Next, we specify that we want to clone a Git repository, namely the Gumby tutorial. The repository URL is specified, including the git branch that we want to checkout. These options together make sure that we have a copy of Tribler and Gumby ready before the experiment starts.
+	\item \emph{Build}: this section indicates the performed actions during the experiment execution. In this case, we run a simple shell script where activate a virtual Python environment (this makes sure that all required Python libraries can be found but it's not very interesting for now). The final line of the bash script starts the Gumby experiment.
+	\item \emph{Post-build Actions}: here we specify actions that should be performed after the experiment has finished. In this experiment, we store files in the \emph{output} directory for later usage (this is called archiving). Finally, we create an image gallery from \emph{.png} files.
+\end{enumerate}
+
+By pressing the \emph{Save} button at the bottom of the webpage, you save the configuration and return to the overview of the specific job.
+You can always return to the configuration overview by clicking the \emph{Configure} menu entry.
+
+When executing a job, a new \emph{build} is created.
+Each build has a number of outcomes, including \emph{succeeded} (everything went well), \emph{failed} (something went wrong during the execution of the build) or \emph{aborted} (the job got manually or automatically aborted).
+The history of builds is presented under the \emph{Build History} tab on the left.
+Here you will see the time, outcome and amount of produced data for each build.
+
+We are now ready to run your newly created job!
+Executing jobs can be done by pressing the \emph{Build Now} button in the upper-left menu, please do so now.
+Refresh the web page shortly after pressing the button and you will notice that a new entry appears under the \emph{Build History} overview on the left.
+You will see a progress bar that indicates the progress of the build.
+Click on the build number to navigate to the page with specific details of each build.
+We can monitor the progress of each build in detail by clicking on the \emph{Console Output} menu entry on the left.
+When the experiment has finished, you will see something similar to the following lines in the log:
+
+\begin{lstlisting}[frame=single]  % Start your code-block
+Archiving artifacts
+Creating image galleries.Creating archived images gallery.No files found for
+image gallery.Started calculate disk usage of build
+Finished Calculation of disk usage of build in 0 seconds
+Started calculate disk usage of workspace
+Finished Calculation of disk usage of workspace in 0 seconds
+Notifying upstream projects of job completion
+Finished: SUCCESS
+\end{lstlisting}
+
+This indicates that the build has succeeded.
+We can now investigate the output files of the selected build by going to the \emph{Build Artifacts}.
+This opens a basic file explorer where you can navigate through all artifacts generated by the build.
+The experiment uses five nodes on the DAS-5 supercomputer and each node writes its output to a directory in \emph{output/localhost}.
+If you navigate to \emph{output/localhost}, you will see five directories.
+Click on any of them, for instance, \emph{node301}, to view files produced by this node.
+Browse the content of the file named \emph{00000.out} which contains the standard out (stdout) output of the processes running on this DAS-5 node.
+You should see the following lines:
+
+\begin{lstlisting}[frame=single]
+My computed sum is 656
+My secret value is 722
+\end{lstlisting}
+
+The computed sum should be 656 but your secret value might be different.
 
 \bibliographystyle{plain}
 {\small \bibliography{workshop}}
