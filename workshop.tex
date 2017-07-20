@@ -330,11 +330,46 @@ Now that you have a basic understanding of Dispersy, Gumby and Jenkins, you can 
 \subsection{Exercises}
 
 This tutorial was built upon an existing experiment but in the end, you should be able to adapt experiments to your needs.
-TODO typ meer over deze exercise + fork GitHub repo + pas Gumby pointer aan etc.
+To test your prowess, you will be tasked with performing two simple modifications of the existing experiment.
+To perform these tasks you will need \texttt{git} installed on your system (for Ubuntu users: \fbox{\texttt{sudo apt-get install git}}).
 
-\subsubsection{Modify the scenario}
+\noindent To get your own copy of Gumby go to GitHub and click the ``fork'' button:
 
-\subsubsection{Modify the module}
+https://github.com/Tribler/gumby
+
+\noindent This will add a copy of the Gumby repository to your account.
+If you click the ``Clone or download'' button on your newly created repository, it will give you the link which you can use to fetch your repository copy.
+You can now browse to a folder where you want Gumby to exist on your computer and run:
+
+\begin{lstlisting}[frame=single]
+git clone <your repository URL>
+\end{lstlisting}
+
+Now we can steal the code from the instructor and make it our own .
+To do this, run the following code \textbf{from within your gumby folder} (choose a good name for your new branch instead of my\_feature):
+\begin{lstlisting}[frame=single]
+git remote add qstokkink https://github.com/qstokkink/gumby.git
+git checkout -b my_feature qstokkink/workshop_code
+git branch --set-upstream-to origin/my_feature
+\end{lstlisting}
+
+You are now pointing in the right direction.
+Git will keep track of all the changes you make in this directory (helpful: \fbox{\texttt{git status}}).
+If you are done editing your folder, add all of your modified files to git using \fbox{\texttt{git add my\_file.py}}.
+Then think of a good message for your change and commit these added files using \fbox{\texttt{git commit -m "This is my great change"}}.
+Finally you can send your collected commits to the GitHub server by running \fbox{\texttt{git push}}.
+
+You can now hook up your custom URL in Jenkins (see Section 2.2).
+
+\subsubsection{EXERCISE 1: Modify the scenario}
+Add your own experiment callback \texttt{exercise\_1} which (1) adds 1 to the input defined by the scenario file and (2) prints the resulting value.
+
+\subsubsection{EXERCISE 2: Modify the configuration}
+Have the experiment use an additional node (note that this does not only concern the configuration file, but also the community).
+
+\subsubsection{BONUS: Modify the community}
+Have the community auto-detect when all other nodes have performed a \texttt{local-share} and start the \texttt{broadcast-share} automatically.
+You can then get rid of the \texttt{share\_subset\_sum} callback.
 
 \bibliographystyle{plain}
 {\small \bibliography{workshop}}
