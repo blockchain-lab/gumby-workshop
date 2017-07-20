@@ -35,16 +35,16 @@ After finishing the assignments in this document, you will be able to to:
 This tutorial assumes that the reader has a basic understanding of the Python programming language.
 
 \section{Introduction}
-Experimentation lies at the heart of science. They are important to verify hypotheses or to analyse behaviour of algorithms.
-In particular, in the field of distributed systems, experiments are often executed at a large scale, involving hundreds of clients producing data and communicating with each other.
-Being able to define and run your own experimentations is a valuable skill.
+Experimentation lies at the heart of science. Experiments are important for verification of hypotheses or to analyse behaviour of algorithms.
+Particularly in the field of distributed systems, experiments are often executed at a large scale, involving hundreds of clients producing data and communicating with each other.
+Being able to define and run your own experiments is a valuable skill.
 
-At the distributed systems department and in particular, the blockchain lab, we have created various tools to ease the design and implementation of experiments. In this workshop, we will explore two of these tools, Dispersy and Gumby, and show the practical value of these tools using a basic distributed algorithm that involves cryptographic secret sharing and network communication.
+At the distributed systems department and in particular the blockchain lab, we have created various tools to ease the design and implementation of experiments. In this workshop, we will explore two of these tools, Dispersy and Gumby, and show the practical value of these tools using a basic distributed algorithm that involves cryptographic secret sharing and network communication.
 Before elaborating the experiment, we will first introduce Dispersy and Gumby.
 
 \subsection{Dispersy}
 Dispersy can be described as a scalable, distributed database, however, it also provides primitives for sending generic messages between users.
-Dispersy has the notion of \emph{communities} which are the best described by a group of users that share a common goal or objective.
+Dispersy has the notion of \emph{communities} which are best described as a group of users that share a common goal or objective.
 Some examples of available communities are:
 \begin{itemize}
 	\item SearchCommunity: This community is responsible for keyword search of content within Tribler, our peer-to-peer filesharing software.
@@ -71,7 +71,7 @@ Take a look at the different machines: the slaves that are prefixed with \emph{D
 
 As you might know, the DAS-5 is not a single machine but shared amongst various universities in the Netherlands.
 Each university involved in the DAS-5 project hosts a cluster with a fixed amount of nodes.
-Detailed informations including the number of nodes on each cluster and hardware specifications, can be found on the DAS-5 website\footnote{http://www.cs.vu.nl/das5/clusters.shtml}.
+Detailed information, including the number of nodes on each cluster and hardware specifications, can be found on the DAS-5 website\footnote{http://www.cs.vu.nl/das5/clusters.shtml}.
 
 Navigate to the \emph{pers} directory on the Jenkins website and locate the job named \emph{workshop\_benaloh\_test}.
 We will copy this job so we can modify it accordingly.
@@ -88,7 +88,7 @@ Some of the most important experiments will be elaborated now:
 
 \begin{enumerate}
 	\item \emph{Restrict where this project can be run}: here you specify on which Jenkins slave you wish to run your job. It should be filled with \emph{DAS5\_TUD}, which is the TU Delft cluster of the DAS-5 supercomputer. You can also select other DAS5 clusters here but the default option should work fine.
-	\item \emph{Source Code Management}: this section specifies whether the experiment needs some code from external sources like a VCS (Git, SVN etc) to operate. Our first option specifies that we are using the settings of another Jenkins job here (\emph{Clone\_tribler\_devel}). This makes sure that Tribler is downloaded into the Jenkins workspace since Tribler is a dependency of Gumby. Next, we specify that we want to clone a Git repository, namely the Gumby tutorial. The repository URL is specified, including the git branch that we want to checkout. These options together make sure that we have a copy of Tribler and Gumby ready before the experiment starts.
+	\item \emph{Source Code Management}: this section specifies whether the experiment needs some code from external sources like a VCS (Git, SVN etc) to operate. Our first option specifies that we are using the workspace of another Jenkins job here (\emph{Clone\_tribler\_devel}). This makes sure that Tribler is downloaded into the Jenkins workspace since Tribler is a dependency of Gumby. Next, we specify that we want to clone a Git repository, namely the Gumby tutorial. The repository URL is specified, including the git branch that we want to checkout. These options together make sure that we have a copy of Tribler and Gumby ready before the experiment starts.
 	\item \emph{Build}: this section indicates the performed actions during the experiment execution. In this case, we run a simple shell script where activate a virtual Python environment (this makes sure that all required Python libraries can be found but it's not very interesting for now). The final line of the bash script starts the Gumby experiment.
 	\item \emph{Post-build Actions}: here we specify actions that should be performed after the experiment has finished. In this experiment, we store files in the \emph{output} directory for later usage (this is called archiving). Finally, we create an image gallery from \emph{.png} files.
 \end{enumerate}
@@ -123,7 +123,7 @@ Finished: SUCCESS
 This indicates that the build has succeeded.
 We can now investigate the output files of the selected build by going to the \emph{Build Artifacts}.
 This opens a basic file explorer where you can navigate through all artifacts generated by the build.
-The experiment uses five nodes on the DAS-5 supercomputer and each node writes its output to a directory in \emph{output/localhost}.
+The experiment uses five nodes on the DAS-5 supercomputer and each node writes its output to a directory in \emph{output/localhost}\footnote{In actuality the head node of the cluster collects the results of each of the nodes and writes them there.}.
 If you navigate to \emph{output/localhost}, you will see five directories.
 Click on any of them, for instance, \emph{node301}, to view files produced by this node.
 Browse the content of the file named \emph{00000.out} which contains the standard out (stdout) output of the processes running on this DAS-5 node.
@@ -137,10 +137,10 @@ My secret value is 722
 The computed sum should be the same for all nodes but the secret values are (probably) different.
 
 \section{The Benaloh Experiment}
-In this exercise we will be implementing a simplified version of the Benaloh secret sharing scheme.
+The output produced in the last section comes from an implementation of a simplified version of the Benaloh secret sharing scheme.
 You can find the complete code of this exercise on GitHub\footnote{https://github.com/qstokkink/gumby/tree/workshop\_code/experiments/benaloh}.
 In particular we will focus on the different ways to share data and not so much on the security or efficiency of the algorithm.
-The protocol we will implement is as follows:
+The protocol is implemented as follows:
 
 \begin{enumerate}
 \item Every node starts with a globally known node count $n$ and modulus $M$ and a private share $s$.
@@ -170,7 +170,7 @@ The first type of message you will find defined in the community file is a \text
 This message uses \texttt{MemberAuthentication}, which means that every message will be signed  and verified when received.
 The alternative to \texttt{MemberAuthentication} is \texttt{NoAuthentication}.
 Next, you will see \texttt{FullSyncDistribution(u"ASC", 128, False)}, this takes care of stamping your message with a global time and which avoids duplicate messages.
-Besides this the \texttt{FullSyncDistribution} definition also serves as a flag to tell Dispersy that your message needs to be gossiped throughout the network.
+Besides this, the \texttt{FullSyncDistribution} definition also serves as a flag to tell Dispersy that your message needs to be gossiped throughout the network.
 The \texttt{CommunityDestination(10)} directive then tells Dispersy that your message will be gossiped using a fanout of $10$ neighboring nodes.
 Lastly, \texttt{self.on\_broadcast\_share} tells Dispersy which function handles incoming messages of the \texttt{u"broadcast-share"} persuasion.
 
@@ -179,8 +179,8 @@ This message can be sent directly to other known peers.
 You will notice that the difference between the two messages lies in the declaration of the \texttt{DirectDistribution} and \texttt{CandidateDestination}.
 These two flags let Dispersy know that you want to directly send this message to others and you will be the one in charge of supplying the peers/candidates to send it to.
 
-One observation you will make is that it is much faster to send to other candidates directly instead of gossiping it using a broadcast.
-Still, it would not be wise, even erroneous, to use the supplied code outside of Gumby.
+One observation you will make is that it is much faster to send to other candidates directly instead of gossiping it (using the broadcast message).
+Still, it would not be wise, even erroneous, to use the direct candidate sending, as given by the supplied code, outside of Gumby.
 
 \subsection{The Gumby Experiment}
 Now that you know how a basic Dispersy community works and that you understand messaging between nodes, we should focus on the Gumby experiment that uses the Dispersy community.
@@ -222,10 +222,11 @@ We will now elaborate some important configuration variables:
 \end{enumerate}
 
 The other configuration options are often not modified and are badly documented, however, if you have any questions about them, you can ask the instructors for more information.
+For your convenience, a configuration file for running the experiment locally has also been provided (\emph{benaloh.conf}).
 
 \subsubsection{Gumby Scenario File}
 Each experiment has a scenario file attached that specifies exactly what should happen during the experiment.
-This file can be founded here:
+This file can be found here:
 
 https://github.com/qstokkink/gumby/blob/workshop\_code/experiments/benaloh/benaloh.scenario
 
@@ -272,23 +273,28 @@ We now elaborate some of the commands found in the scenario file:
 	\item \emph{reset\_dispersy\_statistics}: during the experiment, Dispersy keeps track of various statistics like the number of incoming and outgoing connections and data transferred. This command resets all statistics.
 	\item \emph{annotate}: often, an experiment is divided in several phases. For instance, there might a phase where users compute a value and a phase where they share this value with others. Developers are able to annotate important timestamps during the experiment with the \emph{annotate} command. These annotations will be visible in the final plots when the experiment is finished.
 	\item \emph{share\_local}: this command will share the locally generated random values with other users in the network and will send a \texttt{local-share} message. This happens exactly 30 seconds after the experiment has started. The implementation of this command is present in the \texttt{BenalohModule} file which will be explained in the next section.
-	\item \emph{share\_subset\_sum}: this command will share the subset sum and broadcasts it to all users using a \texttt{broadcast-share} message.
-	\item \emph{print\_local\_value} and \emph{print\_total\_sum}: these commands will simply print the local value and total sum to the standard output. These commands are responsible for the lines in the \emph{.out} file, explored in Section \ref{sec:create_experiment}. Note that we are able to specify duration in mm:ss format so these commands will be executed 90 seconds into the experiment (1:30 minutes).
+	\item \emph{share\_subset\_sum}: this command will share the subset sum and broadcasts it to all users using a \texttt{broadcast-share} message. This is also custom functionality provided by the \texttt{BenalohModule}.
+	\item \emph{print\_local\_value} and \emph{print\_total\_sum}: these commands will simply print the local value and total sum to the standard output. These commands are responsible for the lines in the \emph{.out} file, explored in Section \ref{sec:create_experiment}. Note that we are able to specify duration in [[\emph{hh}:]\emph{mm}:]\emph{ss} format so these commands will be executed 90 seconds into the experiment (1:30 minutes).
 	\item \emph{stop\_session}: this command will stop the running Dispersy session after two minutes.
 	\item \emph{stop}: this will terminate the running process.
 \end{enumerate}
 
 Scenario files are a powerful way to specify a sequence of commands at specific times.
 When the experiment involves hundreds of nodes, it is not uncommon for the scenario to become large.
+Note that scenario files \textbf{do not} have the ability to chain/order events.
 
 \subsubsection{Gumby Module File}
 Implementation of commands present in the scenario file can be found in the Gumby module files.
 The \texttt{BenalohModule} file can be found here:
 
-https://github.com/qstokkink/gumby/blob/workshop\_code/experiments/benaloh/benaloh\_module.py
+https://github.com/qstokkink/gumby/blob/workshop\_code/experiments/benaloh/benaloh\_module.py\\
 
-This file contains three classes, including the \texttt{BenalohModule}.
-Let's take a look at the implementation of the \texttt{share\_local} command:
+This file contains three classes, the \texttt{BenalohCommunityLoader}, the \texttt{BenalohCommunityLauncher} and the \texttt{BenalohModule}.
+The \texttt{BenalohCommunityLauncher} specifies the launch parameters which Dispersy will use to launch our custom community and optionally any load order requirements in respect to other communities.
+The \texttt{BenalohCommunityLoader} is in charge of managing all of the specified \texttt{CommunityLauncher}s, of which we have 1.
+Finally the \texttt{BenalohModule} implements our scenario callbacks and manages the loaded community at runtime.
+
+Let's take a closer look at the implementation of the \texttt{share\_local} command:
 
 \begin{lstlisting}[frame=single]
     @experiment_callback
@@ -304,16 +310,31 @@ In this case, we simply call the \texttt{share\_local} method of the \texttt{Ben
 Now that you have a basic understanding of Dispersy, Gumby and Jenkins, you can try to answer the following questions and do the exercises.
 
 \subsection{Questions}
+\texttt{benaloh.scenario}
+\begin{enumerate}
+\item \textit{Which callbacks are defined by which module?}
+\item \textit{What is the difference between the stop callback and the configuration's node timeout?}
+\end{enumerate}
+\texttt{benaloh\_community.py}:
 \begin{enumerate}
 \item \textit{Why is the supplied code not scalable?}
 \item \textit{Find the two race conditions in the message delivery which can cause incorrect algorithm execution.}
 \item \textit{Do the two messages have a different wire format?}
 \end{enumerate}
+\texttt{benaloh\_module.py}
+\begin{enumerate}
+\item \textit{How could you load another BenalohCommunity on each node?}
+\item \textit{Which node(s) execute this module file?}
+\end{enumerate}
 
-\subsection{Exercise: Modify the Existing Experiment}
+\subsection{Exercises}
 
 This tutorial was built upon an existing experiment but in the end, you should be able to adapt experiments to your needs.
 TODO typ meer over deze exercise + fork GitHub repo + pas Gumby pointer aan etc.
+
+\subsubsection{Modify the scenario}
+
+\subsubsection{Modify the module}
 
 \bibliographystyle{plain}
 {\small \bibliography{workshop}}
