@@ -53,6 +53,58 @@ These experiments can either be executed locally, remotely on a server or on the
 Gumby can be downloaded from Github\footnote{https://github.com/tribler/gumby}, however, local experiment execution is only possible on Linux-based environments due to the requirement of \emph{procfs}.
 This tutorial will explain the basic concepts in Gumby.
 
+\section{The Benaloh Experiment}
+In this exercise we will be implementing a simplified version of the Benaloh secret sharing scheme.
+You can find the complete code of this exercise on GitHub\footnote{https://github.com/qstokkink/gumby/tree/workshop\_code/experiments/benaloh}.
+In particular we will focus on the different ways to share data and not so much on the security or efficiency of the algorithm.
+The protocol we will implement is as follows:
+
+\begin{enumerate}
+\item Every node starts with a globally known node count $n$ and modulus $M$ and a private share $s$.
+The nodes then generate $n-2$ random numbers $R$ and calculates $s - \Sigma R$ individually.
+\item Every node shares all values from step $1$ \textbf{directly} with all other nodes.
+\item Every node sums all the received values from step $2$ and \textbf{broadcasts} this value to all other nodes.
+\item All nodes print the sum of all received values from step $3$.
+\end{enumerate}
+
+\subsection{The Dispersy Community}
+\noindent The community which provides the functionality described above is given here:
+
+https://github.com/qstokkink/gumby/blob/workshop\_code/experiments/benaloh/benaloh\_community.py
+
+\vspace{\baselineskip}
+\noindent Globally this Dispersy Community has the following components it needs to make it work:
+
+\begin{itemize}
+\item A \texttt{Payload} object, representing packets going over the network.
+\item A \texttt{Conversion} object, which can transform \texttt{Payload} objects into binary data.
+\item A \texttt{Community} object which handles incoming \texttt{Payload} objects and provides functionality to send \texttt{Payload} objects.
+\end{itemize}
+
+\noindent The finer details of creating these objects will remain out of the scope of this document, but we would like to draw the attention of the reader to the different types of messages defined in the \\\texttt{BenalohCommunity.initiate\_meta\_messages()} function.
+
+The first type of message you will find defined in the community file is a \textbf{broadcast} message using Dispersy's gossiping: \texttt{u"broadcast-share"}.
+This message uses \texttt{MemberAuthentication}, which means that every message will be signed (ECDSS)  and verified when received.
+The alternative to \texttt{MemberAuthentication} is \texttt{NoAuthentication}.
+Next, you will see \texttt{FullSyncDistribution(u"ASC", 128, False)}, this takes care of stamping your message with a global time and which avoids duplicate messages.
+Besides this the \texttt{FullSyncDistribution} definition also serves as a flag to tell Dispersy that your message needs to be gossiped throughout the network.
+The \texttt{CommunityDestination(10)} directive then tells Dispersy that your message will be gossiped using a fanout of $10$ neighboring nodes.
+Lastly, \texttt{self.on\_broadcast\_share} tells Dispersy which function handles incoming messages of the \texttt{u"broadcast-share"} persuasion.
+
+The other message in this file is the \texttt{u"local-share"} message.
+This message can be sent directly to other known peers.
+You will notice that the difference between the two messages lies in the declaration of the \texttt{DirectDistribution} and \texttt{CandidateDestination}.
+These two flags let Dispersy know that you want to directly send this message to others and you will be the one in charge of supplying the peers/candidates to send it to.
+
+One observation you will make is that it is much faster to send to other candidates directly instead of gossiping it using a broadcast.
+Still, it would not be wise, even worse erroneous, to use the supplied code outside of Gumby.\\
+\\
+\textbf{Questions:}
+\begin{enumerate}
+\item \textit{Why is the supplied code not scalable?}
+\end{enumerate}
+
+
 \bibliographystyle{plain}
 {\small \bibliography{workshop}}
 
