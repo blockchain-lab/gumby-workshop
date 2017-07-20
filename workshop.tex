@@ -5,6 +5,7 @@
 \usepackage{mathtools}
 \usepackage{csquotes}
 \usepackage{listings}
+\usepackage{url}
 
 \lstset{ %
 	  numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
@@ -19,7 +20,7 @@
 \marginsize{2.5cm}{2.5cm}{1cm}{3cm}
 
 \author{
-  M. de Vos $\quad$
+  M.A. de Vos $\quad$
   Q. Stokkink\\
   \small Distributed System group, EEMCS, TUDelft
 }
@@ -37,15 +38,15 @@ After finishing the assignments in this document, you will be able to to:
 	\item Deploy and execute your experiment on our DAS-5 supercomputer using Gumby.
 \end{itemize}
 
-This tutorial assumes that the reader has a basic understanding of the Python programming language.
+This tutorial assumes that the reader has a basic understanding of the Python programming language and basic familiarity with git.
 
 \section{Introduction}
 Experimentation lies at the heart of science. Experiments are important for verification of hypotheses or to analyse behaviour of algorithms.
 Particularly in the field of distributed systems, experiments are often executed at a large scale, involving hundreds of clients producing data and communicating with each other.
-Being able to define and run your own experiments is a valuable skill.
+Being able to define and run your own experiments is an essential skill.
 
-At the distributed systems department and in particular the blockchain lab, we have created various tools to ease the design and implementation of experiments. In this workshop, we will explore two of these tools, Dispersy and Gumby, and show the practical value of these tools using a basic distributed algorithm that involves cryptographic secret sharing and network communication.
-Before elaborating the experiment, we will first introduce Dispersy and Gumby.
+At the distributed systems department and in particular the blockchain lab~\cite{blockchainlab}, we have created various tools to ease the design and implementation of experiments. In this workshop, we will explore two of these tools, Dispersy and Gumby, and show the practical value of these tools using a basic distributed algorithm that involves cryptographic secret sharing and network communication.
+Before turning our attention to the experiment, we will first introduce Dispersy, Gumby and the DAS-5 supercomputer.
 
 \subsection{Dispersy}
 Dispersy can be described as a scalable, distributed database, however, it also provides primitives for sending generic messages between users.
@@ -54,29 +55,42 @@ Some examples of available communities are:
 \begin{itemize}
 	\item SearchCommunity: This community is responsible for keyword search of content within Tribler, our peer-to-peer filesharing software.
 	\item MarketCommunity: This community enables peer-to-peer trading and transaction processing.
+	\item TrustChainCommunity: This community is the implementation of our scalable blockchain fabric.
 \end{itemize}
 
-Creating your own community is straightforward and will be demonstrated in this tutorial.
+Creating your own Dispersy community is straightforward and will be demonstrated in this tutorial.
 Dispersy is open-source software and can be downloaded from Github\footnote{https://github.com/tribler/dispersy}.
-More information about Dispersy can be found in the technical report\cite{zeilemaker2013dispersy}.
+More information about Dispersy can be found in the technical report~\cite{zeilemaker2013dispersy}.
 
 \subsection{Gumby}
 Gumby is a framework specifically designed to run experiments.
 These experiments can either be executed locally, remotely on a server or on the DAS-5 supercomputer.
-Gumby can be downloaded from Github\footnote{https://github.com/tribler/gumby}, however, local experiment execution is only possible on Linux-based environments due to the requirement of \emph{procfs}.
+Gumby can be downloaded from Github\footnote{https://github.com/tribler/gumby}, however, local experiment execution is only possible on Linux-based environments due to the requirement of the \emph{procfs} file system.
 This tutorial will explain the basic concepts in Gumby.
+
+\subsection{DAS-5 Supercomputer}
+As you might know, the DAS-5 supercomputer is not a single machine but shared amongst various universities in the Netherlands.
+Each university involved in the DAS-5 project hosts a cluster with a fixed amount of nodes.
+Detailed information, including the number of nodes on each cluster and hardware specifications, can be found on the DAS-5 website\footnote{http://www.cs.vu.nl/das5/clusters.shtml}.
+
+Since there are many researchers working on large-scale experiments, the DAS-5 has a reservation system where you can reserve some nodes in advance.
+This is in particular helpful to make sure that only you are running an experiment on a specific node.
+However, the reservation system can be frustrating at times and it might be hard to claim a reservation on time.
+Keep this in mind when you might have to run experiments multiple times before conferences or journal deadlines.
+Gumby takes care of automatically reserving and releasing nodes during experiments.
 
 \section{Create Your Experiment}
 \label{sec:create_experiment}
-Start a web browser and navigate to our Jenkins server: https://jenkins.tribler.org.
-Jenkins is an open-source software to automate running various jobs like tests or experiments.
-These jobs can be executed on machines, which are under \emph{Build Executor Status} 
+Now that we introduced Dispersy and Gumby, it is time to see what an experiment looks like and where it is being executed.
+
+\subsection{Jenkins}
+Start by opening a web browser and navigate to our Jenkins server, located at  https://jenkins.tribler.org.
+Jenkins is open-source software to automate running jobs like tests or experiments.
+It is often used during the software development cycle to make sure that software is still stable.
+Jenkins jobs can be executed on machines, which are displayed under \emph{Build Executor Status}.
 Here you will see an overview of all the machines that are capable of executing Jenkins jobs (these machines are also called \emph{slaves}).
 Take a look at the different machines: the slaves that are prefixed with \emph{DAS5\_} are clusters of the DAS-5 supercomputer.
-
-As you might know, the DAS-5 is not a single machine but shared amongst various universities in the Netherlands.
-Each university involved in the DAS-5 project hosts a cluster with a fixed amount of nodes.
-Detailed information, including the number of nodes on each cluster and hardware specifications, can be found on the DAS-5 website\footnote{http://www.cs.vu.nl/das5/clusters.shtml}.
+Additionally, some machines running Windows or macOS are available.
 
 Navigate to the \emph{pers} directory on the Jenkins website and locate the job named \emph{workshop\_benaloh\_test}.
 We will copy this job so we can modify it accordingly.
@@ -85,18 +99,30 @@ To create a copy of an existing job, you should have a valid Jenkins account; if
 Start by clicking on the \emph{New Item} in the menu in the upper-left corner of the Jenkins website.
 You are now prompted to enter the name of the new job.
 Name it something like \emph{workshop\_benaloh\_test\_username} where \emph{username} should be replaced by your Jenkins username or your real name.
-Since we copy an existing job, please enter the name of the existing job under the \emph{Copy from} input, at the bottom of the page (which should be \emph{workshop\_benaloh\_test}) and press the \emph{OK} button to confirm.
+Since we copy an existing job, enter the name of this job under the \emph{Copy from} input, at the bottom of the page (which should be \emph{workshop\_benaloh\_test}) and press the \emph{OK} button to create the job.
 
 You will be redirected to the configuration options of the newly created Jenkins job.
 Here you can change various settings that are related to your experiment.
 Some of the most important experiments will be elaborated now:
 
-\begin{enumerate}
+\begin{itemize}
 	\item \emph{Restrict where this project can be run}: here you specify on which Jenkins slave you wish to run your job. It should be filled with \emph{DAS5\_TUD}, which is the TU Delft cluster of the DAS-5 supercomputer. You can also select other DAS5 clusters here but the default option should work fine.
-	\item \emph{Source Code Management}: this section specifies whether the experiment needs some code from external sources like a VCS (Git, SVN etc) to operate. Our first option specifies that we are using the workspace of another Jenkins job here (\emph{Clone\_tribler\_devel}). This makes sure that Tribler is downloaded into the Jenkins workspace since Tribler is a dependency of Gumby. Next, we specify that we want to clone a Git repository, namely the Gumby tutorial. The repository URL is specified, including the git branch that we want to checkout. These options together make sure that we have a copy of Tribler and Gumby ready before the experiment starts.
+	\begin{figure}[h!]
+		\includegraphics[width=\columnwidth]{jenkins_restrict.png}
+	\end{figure}
+	\item \emph{Source Code Management}: this section specifies whether the experiment needs some code from external sources like a Version Control System (Git, SVN etc) to operate. Our first option specifies that we are using the workspace of another Jenkins job here (\emph{Clone\_tribler\_devel}). This makes sure that Tribler is downloaded into the Jenkins workspace since Tribler is a dependency of Gumby. Next, we specify that we want to clone a Git repository, namely the Gumby tutorial. The repository URL is specified, including the git branch that we want to checkout. These options together make sure that we have a copy of Tribler and Gumby ready before the experiment starts.
+	\begin{figure}[h!]
+		\includegraphics[width=\columnwidth]{jenkins_source.png}
+	\end{figure}
 	\item \emph{Build}: this section indicates the performed actions during the experiment execution. In this case, we run a simple shell script where activate a virtual Python environment (this makes sure that all required Python libraries can be found but it's not very interesting for now). The final line of the bash script starts the Gumby experiment.
+	\begin{figure}[h!]
+		\includegraphics[width=\columnwidth]{jenkins_build.png}
+	\end{figure}
 	\item \emph{Post-build Actions}: here we specify actions that should be performed after the experiment has finished. In this experiment, we store files in the \emph{output} directory for later usage (this is called archiving). Finally, we create an image gallery from \emph{.png} files.
-\end{enumerate}
+	\begin{figure}[h!]
+		\includegraphics[width=\columnwidth]{jenkins_post_build.png}
+	\end{figure}
+\end{itemize}
 
 By pressing the \emph{Save} button at the bottom of the webpage, you save the configuration and return to the overview of the specific job.
 You can always return to the configuration overview by clicking the \emph{Configure} menu entry.
@@ -106,13 +132,14 @@ Each build has a number of outcomes, including \emph{succeeded} (everything went
 The history of builds is presented under the \emph{Build History} tab on the left.
 Here you will see the time, outcome and amount of produced data for each build.
 
+\subsection{Running The Experiment}
 We are now ready to run your newly created job!
 Executing jobs can be done by pressing the \emph{Build Now} button in the upper-left menu, please do so now.
 Refresh the web page shortly after pressing the button and you will notice that a new entry appears under the \emph{Build History} overview on the left.
 You will see a progress bar that indicates the progress of the build.
 Click on the build number to navigate to the page with specific details of each build.
 We can monitor the progress of each build in detail by clicking on the \emph{Console Output} menu entry on the left.
-When the experiment has finished, you will see something similar to the following lines in the log:
+The experiment should take several minutes to finish and when it does, you will see something similar to the following lines in the console log:
 
 \begin{lstlisting}[frame=single]  % Start your code-block
 Archiving artifacts
@@ -142,7 +169,7 @@ My secret value is 722
 The computed sum should be the same for all nodes but the secret values are (probably) different.
 
 \section{The Benaloh Experiment}
-The output produced in the last section comes from an implementation of a simplified version of the Benaloh secret sharing scheme.
+The output produced in the last section comes from an implementation of a simplified version of the Benaloh secret sharing scheme~\cite{benaloh1990generalized}.
 You can find the complete code of this exercise on GitHub\footnote{https://github.com/qstokkink/gumby/tree/workshop\_code/experiments/benaloh}.
 In particular we will focus on the different ways to share data and not so much on the security or efficiency of the algorithm.
 The protocol is implemented as follows:
@@ -155,21 +182,26 @@ The nodes then generate $n-2$ random numbers $R$ and calculates $s - \Sigma R$ i
 \item All nodes print the sum of all received values from step $3$.
 \end{enumerate}
 
+We will now explain all components that together form this experiment.
+
 \subsection{The Dispersy Community}
-\noindent The community which provides the functionality described above is given here:
+\label{sec:dispersy_community}
+Recall that a Dispersy community is a group of users that share a common goal or objective. In this experiment, our objective is secret sharing. The community provides the message definitions to do so.
+The source code of this community is given here:
 
 https://github.com/qstokkink/gumby/blob/workshop\_code/experiments/benaloh/benaloh\_community.py
 
 \vspace{\baselineskip}
-\noindent Globally this Dispersy Community has the following components it needs to make it work:
+\noindent Globally this community needs the following components to function:
 
 \begin{itemize}
 \item A \texttt{Payload} object, representing packets going over the network.
 \item A \texttt{Conversion} object, which can transform \texttt{Payload} objects into binary data.
-\item A \texttt{Community} object which handles incoming \texttt{Payload} objects and provides functionality to send \texttt{Payload} objects.
+\item An object that is a subclass of \texttt{Community}, handling incoming \texttt{Payload} objects and providing functionality to send \texttt{Payload} objects to other users in the community.
 \end{itemize}
 
-\noindent The finer details of creating these objects will remain out of the scope of this document, but we would like to draw the attention of the reader to the different types of messages defined in the \\\texttt{BenalohCommunity.initiate\_meta\_messages()} function.
+\noindent The finer details of creating these objects will remain out of the scope of this document, but we refer the interested reader to our extensive Dispersy tutorial\footnote{https://dispersy.readthedocs.org}.
+We would like to draw the attention of the reader to the different types of messages defined in the \\\texttt{BenalohCommunity.initiate\_meta\_messages()} method.
 
 The first type of message you will find defined in the community file is a \textbf{broadcast} message using Dispersy's gossiping: \texttt{u"broadcast-share"}.
 This message uses \texttt{MemberAuthentication}, which means that every message will be signed  and verified when received.
@@ -230,6 +262,7 @@ The other configuration options are often not modified and are badly documented,
 For your convenience, a configuration file for running the experiment locally has also been provided (\emph{benaloh.conf}).
 
 \subsubsection{Gumby Scenario File}
+\label{sec:gumby_scenario}
 Each experiment has a scenario file attached that specifies exactly what should happen during the experiment.
 This file can be found here:
 
@@ -289,6 +322,7 @@ When the experiment involves hundreds of nodes, it is not uncommon for the scena
 Note that scenario files \textbf{do not} have the ability to chain/order events.
 
 \subsubsection{Gumby Module File}
+\label{sec:gumby_module}
 Implementation of commands present in the scenario file can be found in the Gumby module files.
 The \texttt{BenalohModule} file can be found here:
 
@@ -315,18 +349,18 @@ In this case, we simply call the \texttt{share\_local} method of the \texttt{Ben
 Now that you have a basic understanding of Dispersy, Gumby and Jenkins, you can try to answer the following questions and do the exercises.
 
 \subsection{Questions}
-\texttt{benaloh.scenario}
+Consider the \texttt{benaloh\_community.py} file explained in Section \ref{sec:dispersy_community}:
 \begin{enumerate}
-\item \textit{Which callbacks are defined by which module?}
-\item \textit{What is the difference between the stop callback and the configuration's node timeout?}
+	\item \textit{Name one reason why the supplied code not scalable? I.e. what are the bottlenecks if we increase the number of users in the network?}
+	\item \textit{Find two race conditions in the message delivery which can cause an  incorrect algorithm execution.}
+	\item \textit{Do the two messages defined in the Benaloh community (\texttt{local-share} and \texttt{broadcast-share}) have a different format when sent over the Internet?}
 \end{enumerate}
-\texttt{benaloh\_community.py}:
+Consider the \texttt{benaloh.scenario} file explained in Section \ref{sec:gumby_scenario}.
 \begin{enumerate}
-\item \textit{Why is the supplied code not scalable?}
-\item \textit{Find the two race conditions in the message delivery which can cause incorrect algorithm execution.}
-\item \textit{Do the two messages have a different wire format?}
+\item \textit{Recall that the scenario file used two different modules: \texttt{DispersyModule} and \texttt{BenalohModule}. Which callbacks present in the scenario file are defined by which module?}
+\item \textit{What is the difference between the \emph{stop} callback and the node timeout defined in the experiment configuration file?}
 \end{enumerate}
-\texttt{benaloh\_module.py}
+Consider the \texttt{benaloh\_module.py} file explained in Section \ref{sec:gumby_module}.
 \begin{enumerate}
 \item \textit{How could you load another BenalohCommunity on each node?}
 \item \textit{Which node(s) execute this module file?}
@@ -335,30 +369,24 @@ Now that you have a basic understanding of Dispersy, Gumby and Jenkins, you can 
 \subsection{Exercises}
 
 This tutorial was built upon an existing experiment but in the end, you should be able to adapt experiments to your needs.
-To test your prowess, you will be tasked with performing two simple modifications of the existing experiment.
-To perform these tasks you will need \texttt{git} installed on your system (for Ubuntu users: \fbox{\texttt{sudo apt-get install git}}).
+For instance, you might want to add more messages or use more resources on the DAS-5 supercomputer.
+To test your prowess, you will be tasked with performing two modifications of the existing experiment.
+To perform these tasks you will need the \texttt{git} software on your system.
+For Ubuntu users, this can be done as follows: \fbox{\texttt{sudo apt-get install git}}).
 
-\noindent To get your own copy of Gumby go to GitHub and click the ``fork'' button:
+\noindent To get your own copy of the Gumby framework, go to GitHub and click the ``fork'' button in the upper-right corner.
+The Gumby repository can be found here: https://github.com/Tribler/gumby.
+Note that you should have an account on Github to do so.
 
-https://github.com/Tribler/gumby
-
-\noindent This will add a copy of the Gumby repository to your account.
 If you click the ``Clone or download'' button on your newly created repository, it will give you the link which you can use to fetch your repository copy.
-You can now browse to a folder where you want Gumby to exist on your computer and run:
+Now you can open a terminal, browse to a folder where you want Gumby to exist on your computer and run the following command:
 
 \begin{lstlisting}[frame=single]
 git clone <your repository URL>
+cd gumby
 \end{lstlisting}
 
-Now we can steal the code from the instructor and make it our own .
-To do this, run the following code \textbf{from within your gumby folder} (choose a good name for your new branch instead of my\_feature):
-\begin{lstlisting}[frame=single]
-git remote add qstokkink https://github.com/qstokkink/gumby.git
-git checkout -b my_feature qstokkink/workshop_code
-git branch --set-upstream-to origin/my_feature
-\end{lstlisting}
-
-You are now pointing in the right direction.
+This will fetch the repository from Github and store it on our computer.
 Git will keep track of all the changes you make in this directory (helpful: \fbox{\texttt{git status}}).
 If you are done editing your folder, add all of your modified files to git using \fbox{\texttt{git add my\_file.py}}.
 Then think of a good message for your change and commit these added files using \fbox{\texttt{git commit -m "This is my great change"}}.
