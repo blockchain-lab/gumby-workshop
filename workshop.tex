@@ -126,7 +126,7 @@ My computed sum is 656
 My secret value is 722
 \end{lstlisting}
 
-The computed sum should be 656 but your secret value might be different.
+The computed sum should be the same for all nodes but the secret values are (probably) different.
 
 \section{The Benaloh Experiment}
 In this exercise we will be implementing a simplified version of the Benaloh secret sharing scheme.
@@ -159,7 +159,7 @@ https://github.com/qstokkink/gumby/blob/workshop\_code/experiments/benaloh/benal
 \noindent The finer details of creating these objects will remain out of the scope of this document, but we would like to draw the attention of the reader to the different types of messages defined in the \\\texttt{BenalohCommunity.initiate\_meta\_messages()} function.
 
 The first type of message you will find defined in the community file is a \textbf{broadcast} message using Dispersy's gossiping: \texttt{u"broadcast-share"}.
-This message uses \texttt{MemberAuthentication}, which means that every message will be signed (ECDSS)  and verified when received.
+This message uses \texttt{MemberAuthentication}, which means that every message will be signed  and verified when received.
 The alternative to \texttt{MemberAuthentication} is \texttt{NoAuthentication}.
 Next, you will see \texttt{FullSyncDistribution(u"ASC", 128, False)}, this takes care of stamping your message with a global time and which avoids duplicate messages.
 Besides this the \texttt{FullSyncDistribution} definition also serves as a flag to tell Dispersy that your message needs to be gossiped throughout the network.
@@ -172,11 +172,13 @@ You will notice that the difference between the two messages lies in the declara
 These two flags let Dispersy know that you want to directly send this message to others and you will be the one in charge of supplying the peers/candidates to send it to.
 
 One observation you will make is that it is much faster to send to other candidates directly instead of gossiping it using a broadcast.
-Still, it would not be wise, even worse erroneous, to use the supplied code outside of Gumby.\\
+Still, it would not be wise, even erroneous, to use the supplied code outside of Gumby.\\
 \\
-\textbf{Questions:}
+\textbf{Questions/exercises:}
 \begin{enumerate}
 \item \textit{Why is the supplied code not scalable?}
+\item \textit{Find the two race conditions in the message delivery which can cause incorrect algorithm execution.}
+\item \textit{Do the two messages have a different wire format?}
 \end{enumerate}
 
 \bibliographystyle{plain}
