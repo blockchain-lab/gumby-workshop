@@ -35,7 +35,7 @@ After finishing the assignments in this document, you will be able to to:
 \begin{itemize}
 	\item Send messages to other users in a peer-to-peer network using Dispersy.
 	\item Implement and modify a distributed experiment using Gumby. This includes writing your own scenarios and defining experiment modules.
-	\item Deploy and execute your experiment on our DAS-5 supercomputer using Gumby.
+	\item Deploy and execute your experiment on the DAS-5 supercomputer.
 \end{itemize}
 
 This tutorial assumes that the reader has a basic understanding of the Python programming language and basic familiarity with git.
@@ -45,7 +45,7 @@ Experimentation lies at the heart of science. Experiments are important for veri
 Particularly in the field of distributed systems, experiments are often executed at a large scale, involving hundreds of clients producing data and communicating with each other.
 Being able to define and run your own experiments is an essential skill.
 
-At the distributed systems department and in particular the blockchain lab~\cite{blockchainlab}, we have created various tools to ease the design and implementation of experiments. In this workshop, we will explore two of these tools, Dispersy and Gumby, and show the practical value of these tools using a basic distributed algorithm that involves cryptographic secret sharing and network communication.
+At the distributed systems department and in particular the Blockchain Lab~\cite{blockchainlab}, we have created various tools to ease the design, implementation and deployment of experiments. In this workshop, we will explore two of these tools, Dispersy and Gumby, and show the practical value of these tools using a basic distributed algorithm that involves cryptographic secret sharing and network communication.
 Before turning our attention to the experiment, we will first introduce Dispersy, Gumby and the DAS-5 supercomputer.
 
 \subsection{Dispersy}
@@ -53,9 +53,9 @@ Dispersy can be described as a scalable, distributed database, however, it also 
 Dispersy has the notion of \emph{communities} which are best described as a group of users that share a common goal or objective.
 Some examples of available communities are:
 \begin{itemize}
-	\item SearchCommunity: This community is responsible for keyword search of content within Tribler, our peer-to-peer filesharing software.
-	\item MarketCommunity: This community enables peer-to-peer trading and transaction processing.
-	\item TrustChainCommunity: This community is the implementation of our scalable blockchain fabric.
+	\item \emph{SearchCommunity}: This community is responsible for keyword search of content within Tribler, our peer-to-peer filesharing software.
+	\item \emph{MarketCommunity}: This community enables peer-to-peer trading, trade matching and transaction processing.
+	\item \emph{TrustChainCommunity}: This community is the implementation of our scalable blockchain fabric.
 \end{itemize}
 
 Creating your own Dispersy community is straightforward and will be demonstrated in this tutorial.
@@ -71,26 +71,35 @@ This tutorial will explain the basic concepts in Gumby.
 \subsection{DAS-5 Supercomputer}
 As you might know, the DAS-5 supercomputer is not a single machine but shared amongst various universities in the Netherlands.
 Each university involved in the DAS-5 project hosts a cluster with a fixed amount of nodes.
-Detailed information, including the number of nodes on each cluster and hardware specifications, can be found on the DAS-5 website\footnote{http://www.cs.vu.nl/das5/clusters.shtml}.
+Every cluster has exactly one head node that can be accessed through SSH.
+This head node is basically the gateway to the other subnodes.
+The head node and subnodes share the same file system so all files available on the head node can be accessed by the subnodes and vice versa.
+Detailed information, including the number of nodes available in each cluster and hardware specifications, can be found on the DAS-5 website\footnote{http://www.cs.vu.nl/das5/clusters.shtml}.
 
 Since there are many researchers working on large-scale experiments, the DAS-5 has a reservation system where you can reserve some nodes in advance.
-This is in particular helpful to make sure that only you are running an experiment on a specific node.
-However, the reservation system can be frustrating at times and it might be hard to claim a reservation on time.
+This is in particular helpful to make sure that only you are running an experiment on a specific node, avoiding interference or resource usage from other researchers.
+However, the reservation system can be frustrating at times and it might be hard to claim a reservation when it's busy.
 Keep this in mind when you might have to run experiments multiple times before conferences or journal deadlines.
 Gumby takes care of automatically reserving and releasing nodes during experiments.
 
 \section{Create Your Experiment}
 \label{sec:create_experiment}
-Now that we introduced Dispersy and Gumby, it is time to see what an experiment looks like and where it is being executed.
+Now that we introduced Dispersy and Gumby, it is time to see what an experiment looks like and how it is being executed.
 
 \subsection{Jenkins}
-Start by opening a web browser and navigate to our Jenkins server, located at  https://jenkins.tribler.org.
+\label{sec:create_experiment_jenkins}
+Start by opening a web browser and navigate to our Jenkins server, located at https://jenkins.tribler.org.
 Jenkins is open-source software to automate running jobs like tests or experiments.
 It is often used during the software development cycle to make sure that software is still stable.
 Jenkins jobs can be executed on machines, which are displayed under \emph{Build Executor Status}.
 Here you will see an overview of all the machines that are capable of executing Jenkins jobs (these machines are also called \emph{slaves}).
 Take a look at the different machines: the slaves that are prefixed with \emph{DAS5\_} are clusters of the DAS-5 supercomputer.
 Additionally, some machines running Windows or macOS are available.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=5cm]{jenkins_slaves.png}
+\end{figure}
 
 Navigate to the \emph{pers} directory on the Jenkins website and locate the job named \emph{workshop\_benaloh\_test}.
 We will copy this job so we can modify it accordingly.
@@ -131,6 +140,11 @@ When executing a job, a new \emph{build} is created.
 Each build has a number of outcomes, including \emph{succeeded} (everything went well), \emph{failed} (something went wrong during the execution of the build) or \emph{aborted} (the job got manually or automatically aborted).
 The history of builds is presented under the \emph{Build History} tab on the left.
 Here you will see the time, outcome and amount of produced data for each build.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=7cm]{jenkins_build_history.png}
+\end{figure}
 
 \subsection{Running The Experiment}
 We are now ready to run your newly created job!
@@ -177,8 +191,8 @@ The protocol is implemented as follows:
 \begin{enumerate}
 \item Every node starts with a globally known node count $n$ and modulus $M$ and a private share $s$.
 The nodes then generate $n-2$ random numbers $R$ and calculates $s - \Sigma R$ individually.
-\item Every node shares all values from step $1$ \textbf{directly} with all other nodes.
-\item Every node sums all the received values from step $2$ and \textbf{broadcasts} this value to all other nodes.
+\item Every node shares all values from step $1$ \textbf{directly} with all other nodes, in a point-to-point fashion (using a \texttt{local-share} message).
+\item Every node sums all the received values from step $2$ and \textbf{broadcasts} this value to all other nodes (using a \texttt{broadcast-share} message).
 \item All nodes print the sum of all received values from step $3$.
 \end{enumerate}
 
@@ -186,7 +200,7 @@ The nodes then generate $n-2$ random numbers $R$ and calculates $s - \Sigma R$ i
 
 \subsection{The Dispersy Community}
 \label{sec:dispersy_community}
-Recall that a Dispersy community is a group of users that share a common goal or objective. In this experiment, our objective is secret sharing. The community provides the message definitions to do so.
+Recall that a Dispersy community is a group of users that share a common goal or objective. In this experiment, our objective is secret sharing. The community provides message definitions to do so.
 The source code of this community is given here:
 
 https://github.com/qstokkink/gumby/blob/workshop\_code/experiments/benaloh/benaloh\_community.py
@@ -204,19 +218,20 @@ https://github.com/qstokkink/gumby/blob/workshop\_code/experiments/benaloh/benal
 For some general clarification, we would now like to draw the attention of the reader to the different types of messages defined in the \\\texttt{BenalohCommunity.initiate\_meta\_messages()} method.
 
 The first type of message you will find defined in the community file is a \textbf{broadcast} message using Dispersy's gossiping: \texttt{u"broadcast-share"}.
-This message uses \texttt{MemberAuthentication}, which means that every message will be signed  and verified when received.
-The alternative to \texttt{MemberAuthentication} is \texttt{NoAuthentication}.
-Next, you will see \texttt{FullSyncDistribution(u"ASC", 128, False)}, this takes care of stamping your message with a global time (a Lamport clock timestamp to be precise \cite{lamport1978time}), which avoids duplicate messages.
-Besides this, the \texttt{FullSyncDistribution} definition also serves as a flag to tell Dispersy that your message needs to be gossiped throughout the network.
-The \texttt{CommunityDestination(10)} directive then tells Dispersy that your message will be gossiped using a fanout of $10$ neighboring nodes.
-Lastly, \texttt{self.on\_broadcast\_share} tells Dispersy which function handles incoming messages of the \\\texttt{u"broadcast-share"} persuasion.
+This message uses \texttt{MemberAuthentication}, which means that every message will be signed and verified when received.
+The alternative to \texttt{MemberAuthentication} is \texttt{NoAuthentication}, where messages won't be signed and verified.
+This option is helpful when you want to save CPU cycles since verification of a cryptographic signature is a costly and relatively time-consuming operation.
+Next, you will see \texttt{FullSyncDistribution(u"ASC", 128, False)}; this takes care of stamping your message with a global time (a Lamport clock timestamp to be precise \cite{lamport1978time}), avoiding processing of duplicate messages.
+Besides this, the \texttt{FullSyncDistribution} definition also serves as a flag to tell Dispersy that your message needs to be gossiped throughout the complete network.
+The \texttt{CommunityDestination(10)} directive then tells Dispersy that your message will be gossiped to $10$ connected nodes.
+Finally, \texttt{self.on\_broadcast\_share} tells Dispersy which method handles incoming messages of the \\\texttt{u"broadcast-share"} persuasion.
 
 The other message in this file is the \texttt{u"local-share"} message.
 This message can be sent directly to other known peers.
 You will notice that the difference between the two messages lies in the declaration of the \texttt{DirectDistribution} and \texttt{CandidateDestination}.
 These two flags let Dispersy know that you want to directly send this message to others and you will be the one in charge of supplying the peers/candidates to send it to.
 
-One observation you will make is that it is much faster to send to other candidates directly instead of gossiping it (using the broadcast message).
+One observation you will make is that it is much faster to send messages to other candidates directly instead of gossiping it (using the broadcast message).
 Still, it would not be wise, even erroneous, to use the direct candidate sending, as given by the supplied code, outside of Gumby.
 
 \subsection{The Gumby Experiment}
@@ -341,7 +356,7 @@ Let's take a closer look at the implementation of the \texttt{share\_local} comm
         self.community.share_local()
 \end{lstlisting}
 
-The implementation of each command should be decorated by an \texttt{@experiment\_callback}.
+The implementation of each scenario file command should be decorated by an \texttt{@experiment\_callback}.
 The name of this method must match the command in the scenario file.
 In this case, we simply call the \texttt{share\_local} method of the \texttt{BenalohCommunity}.
 \newpage
@@ -352,7 +367,7 @@ Now that you have a basic understanding of Dispersy, Gumby and Jenkins, you can 
 Consider the \texttt{benaloh\_community.py} file explained in Section \ref{sec:dispersy_community}:
 \begin{enumerate}
 	\item \textit{Name one reason why the supplied code is not scalable. I.e. what are the bottlenecks if we increase the number of users in the network?}
-	\item \textit{Find two race conditions in the message delivery which can cause an  incorrect algorithm execution.}
+	\item \textit{Find two race conditions in the message delivery which can cause an incorrect algorithm execution.}
 	\item \textit{Do the two messages defined in the Benaloh community (\texttt{local-share} and \texttt{broadcast-share}) have a different format when sent over the Internet?}
 \end{enumerate}
 Consider the \texttt{benaloh.scenario} file explained in Section \ref{sec:gumby_scenario}.
@@ -387,22 +402,27 @@ cd gumby
 \end{lstlisting}
 
 This will fetch the repository from Github and store it on your computer.
-Git will keep track of all the changes you make in this directory (helpful: \fbox{\texttt{git status}}).
-If you are done editing your folder, add all of your modified files to git using \fbox{\texttt{git add my\_file.py}}.
+Git will keep track of all the changes you make in this directory (\fbox{\texttt{git status}} is a helpful command for that).
+If you are done editing your folder, add all of your modified files to git using \fbox{\texttt{git add .}}.
 Then think of a good message for your change and commit these added files using \fbox{\texttt{git commit -m "This is my great change"}}.
-Finally you can send your collected commits to the GitHub server by running \fbox{\texttt{git push}}.
+Finally you can send your commits to the GitHub server by running \fbox{\texttt{git push}}.
 
-You can now hook up your custom URL in Jenkins (see Section 2.2).
-For the following two exercises you can either start with a fresh workspace or modify the existing experiment files.
-To solve the bonus exercise you will need to copy the example files to your own repository.
+Now we should instruct Jenkins to fetch a copy of your repository instead.
+This can be changed on the configuration page of the job you created in Section \ref{sec:create_experiment_jenkins}.
+Change the settings under \emph{Source Code Management} so it points to your repository.
+Try building the experiment to check whether everything works correctly and the experiment finishes.
 
-\subsubsection{EXERCISE 1: Modify the scenario}
-Add your own experiment callback \texttt{exercise\_1} which (1) adds 1 to the input defined by the scenario file and (2) prints the resulting value.
+\subsubsection{Exercise 1: Modify the scenario}
+Add your own experiment callback \texttt{exercise\_1} which:
+\begin{enumerate}
+	\item adds $1$ to the input defined by the scenario file
+	\item prints the resulting value
+\end{enumerate}
 
-\subsubsection{EXERCISE 2: Modify the configuration}
-Have the experiment use an additional node (note that this does not only concern the configuration file, but also the community).
+\subsubsection{Exercise 2: Modify the configuration}
+Have the experiment use an additional node (note that you should not only change the Gumby configuration file but also make a change in the Dispersy community code).
 
-\subsubsection{BONUS: Modify the community}
+\subsubsection{Bonus: Modify the community}
 Have the \texttt{BenalohCommunity} auto-detect when all other nodes have performed a \texttt{local-share} and start the \texttt{broadcast-share} automatically.
 You can then get rid of the \texttt{share\_subset\_sum} callback.
 
